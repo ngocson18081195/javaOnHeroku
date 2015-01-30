@@ -13,74 +13,85 @@ import org.jscience.physics.model.RelativisticModel;
 import org.jscience.physics.amount.Amount;
 
 public class Main extends HttpServlet {
-	@Override
-		protected void doGet(HttpServletRequest req, HttpServletResponse resp)
-		throws ServletException, IOException {
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp)
+    throws ServletException, IOException {
 
-			if (req.getRequestURI().endsWith("/db")) {
-				showDatabase(req,resp);
-			} else {
-				showHome(req,resp);
-			}
-		}
+        if (req.getRequestURI().endsWith("/db")) {
+            showDatabase(req,resp);
+        } else if (req.getRequestURI().endsWith("/about")) {
+            showAbout(req, resp);
+        }
+        else {
+            showHome(req, resp);
+        }
+    }
 
-	private void showHome(HttpServletRequest req, HttpServletResponse resp)
-		throws ServletException, IOException {
-			resp.getWriter().print("Hello from Java... and Heroku!");
-			resp.getWriter().print("\n");
+    private void showAbout(HttpServletRequest req, HttpServletResponse resp)
+    throws ServletException, IOException {
+        resp.getWriter().print("About page");
+        resp.getWriter().print("\n");
 
-			// Energy is compatible with mass (E=mc2)
-			
-			RelativisticModel.select();
+        resp.getWriter().print("_");
+    }
 
-		    String energy = System.getenv().get("ENERGY");
-		    Amount<Mass> m = Amount.valueOf(energy).to(KILOGRAM);
-		    resp.getWriter().print("E=mc^2: " + energy + " = " + m);
-		}
+    private void showHome(HttpServletRequest req, HttpServletResponse resp)
+    throws ServletException, IOException {
+        resp.getWriter().print("Hello from Java... and Heroku!");
+        resp.getWriter().print("\n");
 
-	private void showDatabase(HttpServletRequest req, HttpServletResponse resp)
-		throws ServletException, IOException {
-			Connection connection = null;
-			try {
-				connection = getConnection();
+            // Energy is compatible with mass (E=mc2)
 
-				Statement stmt = connection.createStatement();
-				stmt.executeUpdate("CREATE TABLE IF NOT EXISTS ticks (tick timestamp)");
-				stmt.executeUpdate("INSERT INTO ticks VALUES (now())");
-				ResultSet rs = stmt.executeQuery("SELECT tick FROM ticks");
+        RelativisticModel.select();
 
-				String out = "Hello!\n";
-				while (rs.next()) {
-					out += "Read from DB: " + rs.getTimestamp("tick") + "\n";
-				}
+        String energy = System.getenv().get("ENERGY");
+        Amount<Mass> m = Amount.valueOf(energy).to(KILOGRAM);
+        resp.getWriter().print("E=mc^2: " + energy + " = " + m);
+    }
 
-				resp.getWriter().print(out);
-			} catch (Exception e) {
-				resp.getWriter().print("There was an error: " + e.getMessage());
-			} finally {
-				if (connection != null) try{connection.close();} catch(SQLException e){}
-			}
-		}
+    private void showDatabase(HttpServletRequest req, HttpServletResponse resp)
+    throws ServletException, IOException {
+        Connection connection = null;
+        try {
+            connection = getConnection();
 
-	private Connection getConnection() throws URISyntaxException, SQLException {
-		URI dbUri = new URI(System.getenv("DATABASE_URL"));
+            Statement stmt = connection.createStatement();
+            stmt.executeUpdate("CREATE TABLE IF NOT EXISTS ticks (tick timestamp)");
+            stmt.executeUpdate("INSERT INTO ticks VALUES (now())");
+            ResultSet rs = stmt.executeQuery("SELECT tick FROM ticks");
 
-		String username = dbUri.getUserInfo().split(":")[0];
-		String password = dbUri.getUserInfo().split(":")[1];
-		int port = dbUri.getPort();
+            String out = "Hello!\n";
+            while (rs.next()) {
+                out += "Read from DB: " + rs.getTimestamp("tick") + "\n";
+            }
 
-		String dbUrl = "jdbc:postgresql://" + dbUri.getHost() + ":" + port + dbUri.getPath();
+            resp.getWriter().print(out);
+        } catch (Exception e) {
+            resp.getWriter().print("There was an error: " + e.getMessage());
+        } finally {
+            if (connection != null) try{connection.close();} catch(SQLException e){}
+        }
+    }
 
-		return DriverManager.getConnection(dbUrl, username, password);
-	}
+    private Connection getConnection() throws URISyntaxException, SQLException {
+        URI dbUri = new URI(System.getenv("DATABASE_URL"));
 
-	public static void main(String[] args) throws Exception {
-		Server server = new Server(Integer.valueOf(System.getenv("PORT")));
-		ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
-		context.setContextPath("/");
-		server.setHandler(context);
-		context.addServlet(new ServletHolder(new Main()),"/*");
-		server.start();
-		server.join();
-	}
+        String username = dbUri.getUserInfo().split(":")[0];
+        String password = dbUri.getUserInfo().split(":")[1];
+        int port = dbUri.getPort();
+
+        String dbUrl = "jdbc:postgresql://" + dbUri.getHost() + ":" + port + dbUri.getPath();
+
+        return DriverManager.getConnection(dbUrl, username, password);
+    }
+
+    public static void main(String[] args) throws Exception {
+        Server server = new Server(Integer.valueOf(System.getenv("PORT")));
+        ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
+        context.setContextPath("/");
+        server.setHandler(context);
+        context.addServlet(new ServletHolder(new Main()),"/*");
+        server.start();
+        server.join();
+    }
 }
