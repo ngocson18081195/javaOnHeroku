@@ -27,11 +27,15 @@ public class Main extends HttpServlet {
 	private void showHome(HttpServletRequest req, HttpServletResponse resp)
 		throws ServletException, IOException {
 			resp.getWriter().print("Hello from Java... and Heroku!");
-			// Energy is compatible with mass (E=mc2)
-			RelativisticModel.select();
-			Amount<Mass> m = Amount.valueOf("12 GeV").to(KILOGRAM);
+			resp.getWriter().print("\n");
 
-			resp.getWriter().print("E=mc^2: 12 GeV = " + m);
+			// Energy is compatible with mass (E=mc2)
+			
+			RelativisticModel.select();
+
+		    String energy = System.getenv().get("ENERGY");
+		    Amount<Mass> m = Amount.valueOf(energy).to(KILOGRAM);
+		    resp.getWriter().print("E=mc^2: " + energy + " = " + m);
 		}
 
 	private void showDatabase(HttpServletRequest req, HttpServletResponse resp)
